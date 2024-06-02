@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prediksi Jumlah Penduduk</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/milligram/1.4.1/milligram.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+</head>
+<body>
+    <div class="container mt-3">
+        <div class="input-group mb-3 mt-3">
+            <h1>Jumlah Penduduk Kota Surabaya 2014 - 2023<br></h1>
+            <table class="table table-dark">
+            <thead>
+                <th>No</th>
+                <th>Nama</th>
+                <th>Tahun</th>
+                <th>Jumlah(jiwa)</th>
+            </thead>
+            <tbody id="tbody1"></tbody>
+            </table>
+        </div>
+        
+        <h1>Prediksi Jumlah Penduduk</h1>
+        <form id="prediction-form">
+            <label for="year">Tahun:</label>
+            <input type="number" id="year" name="year" required>
+            <button type="submit">Prediksi</button>
+        </form>
+        <h2 id="result"></h2>
+    </div>
+
+    <script type="module">
+        var stdNo1 = 0;
+        var stdNo2 = 0;
+        var tbody1 = document.getElementById('tbody1');
+
+        function AddItemToTable(tbody, stdNo, namaa,tahunn,jumlah){
+            let trow = document.createElement("tr");
+            let td1 = document.createElement("td");
+            let td2 = document.createElement("td");
+            let td3 = document.createElement("td");
+            let td4 = document.createElement("td");
+            
+            td1.innerHTML=++stdNo;
+            td2.innerHTML=namaa;
+            td3.innerHTML=tahunn;
+            td4.innerHTML=jumlah;
+            td3.classList +="tahunnfield";
+            trow.appendChild(td1);
+            trow.appendChild(td2);
+            trow.appendChild(td3);
+            trow.appendChild(td4);
+
+            tbody.appendChild(trow);
+            return stdNo;
+        }
+
+        function AddAllItemsToTable(tbody, stdNo, penduduk){
+            stdNo=0;
+            tbody.innerHTML="";
+            penduduk.forEach(element => {
+                AddItemToTable(tbody, stdNo, element.Nama, element.Tahun, element.JumlahPenduduk);
+            });
+        }
+
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+        import { getDatabase, ref, child, onValue, get } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+       
+        const firebaseConfig = {
+            apiKey: "AIzaSyAI4LMtYD9ml_YncbC1Pcs5DcaQotROkW4",
+            authDomain: "tubesapicc.firebaseapp.com",
+            databaseURL: "https://tubesapicc-default-rtdb.firebaseio.com",
+            projectId: "tubesapicc",
+            storageBucket: "tubesapicc.appspot.com",
+            messagingSenderId: "694969630783",
+            appId: "1:694969630783:web:fb6092ddf22fb02bb9788a",
+            measurementId: "G-DJJZWGXDVS"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+
+        const db = getDatabase();
+
+        function GetAllDataOnce(){
+            const dbRef = ref(db);
+
+            get(child(dbRef, "data"))
+            .then((snapshot)=>{
+                var jumlahp =[];
+                snapshot.forEach(childSnapshot => {
+                    jumlahp.push(childSnapshot.val());
+                });
+
+                AddAllItemsToTable(tbody1, stdNo1, jumlahp);
+            });
+        }
+
+        function GetAllDataRealtime(){
+            const dbRef1 = ref(db, "data");
+
+            onValue(dbRef1, (snapshot)=>{
+                var jumlahp =[];
+                snapshot.forEach(childSnapshot => {
+                    jumlahp.push(childSnapshot.val());
+                });
+
+                AddAllItemsToTable(tbody1, stdNo1, jumlahp);
+            });
+        }
+
+        window.onload = GetAllDataRealtime;
+    </script>
+
+    <script>
+        document.getElementById('prediction-form').addEventListener('submit', async function(event) {
+            event.preventDefault();
+            const year = document.getElementById('year').value;
+            const response = await fetch('/predict', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ year: year })
+            });
+            const data = await response.json();
+            document.getElementById('result').innerText = `Prediksi Jumlah Penduduk: ${data.prediction.toFixed(2)}`;
+        });
+    </script>
+</body>
+</html>
